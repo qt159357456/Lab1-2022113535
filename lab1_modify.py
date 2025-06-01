@@ -1,9 +1,10 @@
-﻿import re
+"""这是模块的文档字符串，用于说明本文件的功能"""
+import re
 import sys
 import random
 import heapq
 from collections import defaultdict
-def showDirectedGraph(graph):
+def show_directed_graph(graph):
     """以文本形式展示有向图结构"""
     print("\nDirected Graph Structure:")
     # 按字母顺序排序节点
@@ -20,15 +21,18 @@ def showDirectedGraph(graph):
         neighbor_str = ", ".join([f"{n}({w})" for n, w in sorted_neighbors])
         print(f"{node} -> {neighbor_str}")
 def process_text(text):
+    """处理文本，提取单词并转换为小写"""
     text = re.sub(r'[^a-zA-Z]', ' ', text).lower()
     words = text.split()
     return words
 
 def read_file(filename):
+    """读取文件内容"""
     with open(filename, 'r', encoding='utf-8') as f:
         return f.read()
 
 def build_graph(words):
+    """根据单词列表构建有向图"""
     graph = defaultdict(lambda: defaultdict(int))
     for i in range(len(words) - 1):
         current = words[i]
@@ -40,7 +44,6 @@ def build_graph(words):
 def query_bridge_words(graph, nodes, word1, word2):
     """查询两个单词之间的桥接词"""
     word1, word2 = word1.lower(), word2.lower()
-    
     # 检查节点是否存在
     if word1 not in nodes or word2 not in nodes:
         if word1 not in nodes and word2 not in nodes:
@@ -49,20 +52,17 @@ def query_bridge_words(graph, nodes, word1, word2):
             return f"No {word1} in the graph!"
         else:
             return f"No {word2} in the graph!"
-    
     # 处理自引用节点情况
     if word1 == word2:
         if word2 in graph.get(word1, {}):
             return f"Self-reference path exists from {word1} to itself."
         else:
-            return f"No bridge words needed for self-reference."
-    
+            return "No bridge words needed for self-reference."
     # 查找桥接词
     bridge = []
     for candidate in graph.get(word1, {}):
         if word2 in graph.get(candidate, {}):
             bridge.append(candidate)
-    
     # 返回结果
     if not bridge:
         return f"No bridge words from {word1} to {word2}!"
@@ -73,13 +73,14 @@ def query_bridge_words(graph, nodes, word1, word2):
                 f"{', '.join(bridge[:-1])} and {bridge[-1]}.")
 
 def generate_new_text(graph, input_text):
+    """根据输入文本生成新文本，使用图中的桥接词"""
     words = process_text(input_text)
     new_words = []
-    for i in range(len(words)):
-        new_words.append(words[i])
-        if i < len(words) - 1:
-            current = words[i].lower()
-            next_word = words[i+1].lower()
+    for index, current_word in enumerate(words):
+        new_words.append(current_word)  # 直接使用元素，无需 words[index]
+        if index < len(words) - 1:
+            current = current_word.lower()  # 直接访问当前元素
+            next_word = words[index + 1].lower()  # 保持边界检查逻辑
             candidates = []
             if current in graph:
                 for candidate in graph[current]:
@@ -90,6 +91,7 @@ def generate_new_text(graph, input_text):
     return ' '.join(new_words)
 
 def dijkstra(graph, nodes, start, end):
+    """使用Dijkstra算法计算从start到end的最短路径"""
     # nodes = list(graph.keys())
     dist = {n: float('inf') for n in nodes}
     prev = {n: None for n in nodes}
@@ -120,15 +122,17 @@ def dijkstra(graph, nodes, start, end):
     return path, dist.get(end, float('inf'))
 
 def calc_shortest_path(graph, nodes,word1, word2):
+    """计算从word1到word2的最短路径"""
     word1, word2 = word1.lower(), word2.lower()
     if word1 not in nodes or word2 not in nodes:
-        return f"One or both words not in graph."
+        return "One or both words not in graph."
     path, dist = dijkstra(graph, nodes,word1, word2)
     if not path:
         return f"No path from {word1} to {word2}."
     return f"Shortest path: {' → '.join(path)} (length {dist})"
 
 def calculate_pagerank(graph, nodes, d=0.85, max_iter=100, tol=1e-6):
+    """计算PageRank值"""
     # nodes = list(graph.keys())
     n = len(nodes)
     pr = {node: 1/n for node in nodes}
@@ -146,6 +150,7 @@ def calculate_pagerank(graph, nodes, d=0.85, max_iter=100, tol=1e-6):
     return pr
 
 def random_walk(graph,nodes):
+    """执行随机游走，返回一个随机路径"""
     if not nodes:
         return ""
     start = random.choice(nodes)
@@ -166,14 +171,16 @@ def random_walk(graph,nodes):
     return ' '.join(path)
 
 def main():
+    """主函数，处理命令行参数和用户交互"""
     if len(sys.argv) > 1:
         filename = sys.argv[1]
         text = read_file(filename)
         words = process_text(text)
         graph,nodes = build_graph(words)
-        showDirectedGraph(graph)
+        show_directed_graph(graph)
     while True:
-        print("\n1. Read file\n2. Show graph\n3. Query bridge words\n4. Generate new text\n5. Shortest path\n6. PageRank\n7. Random walk\n8. Exit")
+        print("\n1. Read file\n2. Show graph\n3. Query bridge words\n4. Generate new text\n" \
+                "5. Shortest path\n6. PageRank\n7. Random walk\n8. Exit")
         choice = input("Choose: ")
         if choice == '1':
             filename = input("Enter filename: ")
@@ -181,7 +188,7 @@ def main():
             words = process_text(text)
             graph,nodes = build_graph(words)
         elif choice == '2':
-            showDirectedGraph(graph)
+            show_directed_graph(graph)
         elif choice == '3':
             w1 = input("Word1: ")
             w2 = input("Word2: ")
@@ -203,7 +210,7 @@ def main():
         elif choice == '7':
             walk = random_walk(graph, nodes)
             print("Walk:", walk)
-            with open('walk.txt', 'w') as f:
+            with open('walk.txt', 'w', encoding='utf-8') as f:
                 f.write(walk)
         elif choice == '8':
             break
